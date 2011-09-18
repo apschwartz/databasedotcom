@@ -127,11 +127,13 @@ module Databasedotcom
         self.description["fields"].collect { |f| f["name"] }
       end
       
+      # Returns an Array of related list names that this Sobject has.
       def self.relatedLists
         self.description["childRelationships"].collect { |cr| cr["relationshipName"]}
       end
 
-      # Materializes the dynamically created Sobject class by adding all attribute accessors for each field as described in the description of the object on Force.com
+      # Materializes the dynamically created Sobject class by adding all attribute accessors for each field as described in the description of the object on Force.com.
+      # Include accessors for each Related List as well.  Related Lists accessors always return nil or a collection (Array) of Sobjects. 
       def self.materialize(sobject_name)
         self.cattr_accessor :description
         self.cattr_accessor :type_map

@@ -367,6 +367,11 @@ module Databasedotcom
 
     def collection_from(response)
       response = JSON.parse(response)
+      collection_from_parsed_JSON(response)
+    end
+
+    def collection_from_parsed_JSON(response)
+#      response = JSON.parse(response)
       array_response = response.is_a?(Array)
       if array_response
         records = response.collect { |rec| self.find(rec["attributes"]["type"], rec["Id"]) }
@@ -378,7 +383,11 @@ module Databasedotcom
             field = new_record.description['fields'].find do |field|
               key_from_label(field["label"]) == name || field["name"] == name
             end
+            childRelationship = new_record.description['childRelationships'].find do |cr|
+              cr['relationshipName'] == name
+            end
             set_value(new_record, field["name"], value, field["type"]) if field
+            set_value(new_record, name, collection_from_parsed_JSON(value), childRelationship['childSObject']) if (childRelationship && value)
           end
           new_record
         end

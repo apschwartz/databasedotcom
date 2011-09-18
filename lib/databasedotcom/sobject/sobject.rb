@@ -11,6 +11,9 @@ module Databasedotcom
         self.class.description["fields"].each do |field|
           self.send("#{field["name"]}=", field["defaultValueFormula"])
         end
+        self.class.description["childRelationships"].each do |cr|
+          self.send("#{cr["relationshipName"]}=", nil) if cr["relationshipName"]
+        end
         self.attributes=(attrs)
       end
 
@@ -123,6 +126,10 @@ module Databasedotcom
       def self.attributes
         self.description["fields"].collect { |f| f["name"] }
       end
+      
+      def self.relatedLists
+        self.description["childRelationships"].collect { |cr| cr["relationshipName"]}
+      end
 
       # Materializes the dynamically created Sobject class by adding all attribute accessors for each field as described in the description of the object on Force.com
       def self.materialize(sobject_name)
@@ -143,6 +150,13 @@ module Databasedotcom
             :updateable? => field["updateable"],
             :createable? => field["createable"]
           }
+        end
+        self.description["childRelationships"].each do |cr|
+          name = cr["relationshipName"]
+          if name
+            attr_accessor name.to_sym
+            self.type_map[name] = {:type => "SObject", :child_SObject => cr["childSObject"], :cascade_delete? => cr["cascadeDelete"]}
+          end
         end
       end
 

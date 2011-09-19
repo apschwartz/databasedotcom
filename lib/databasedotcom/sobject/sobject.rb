@@ -133,7 +133,7 @@ module Databasedotcom
       end
 
       # Materializes the dynamically created Sobject class by adding all attribute accessors for each field as described in the description of the object on Force.com.
-      # Include accessors for each Related List as well.  Related Lists accessors always return nil or a collection (Array) of Sobjects. 
+      # Includes accessors for each Related List as well.  Related List accessors always return nil or a collection (Array) of Sobjects. 
       def self.materialize(sobject_name)
         self.cattr_accessor :description
         self.cattr_accessor :type_map

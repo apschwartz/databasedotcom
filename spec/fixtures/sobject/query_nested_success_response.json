@@ -1,0 +1,33 @@
+{
+  "totalSize": 1,
+  "done": true,
+  "records": [
+    {
+      "attributes": {
+        "type": "TestParentObj__c",
+        "url": "/services/data/v22.0/sobjects/TestParentObj__c/a0wA0000001tGgkIAE"
+      },
+      "Name": "Parent1",
+      "TestChildObjs__r": {
+        "totalSize": 2,
+        "done": true,
+        "records": [
+          {
+            "attributes": {
+              "type": "TestChildObj__c",
+              "url": "/services/data/v22.0/sobjects/TestChildObj__c/a0xA0000000jbVWIAY"
+            },
+            "Name": "Child1a"
+          },
+          {
+            "attributes": {
+              "type": "TestChildObj__c",
+              "url": "/services/data/v22.0/sobjects/TestChildObj__c/a0xA0000000jbVbIAI"
+            },
+            "Name": "Child1b"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -127,9 +127,9 @@ module Databasedotcom
         self.description["fields"].collect { |f| f["name"] }
       end
       
-      # Returns an Array of related list names that this Sobject has.
+      # Returns an Array of non-nil related list names that this Sobject has.
       def self.relatedLists
-        self.description["childRelationships"].collect { |cr| cr["relationshipName"]}
+        self.description["childRelationships"].collect { |cr| cr["relationshipName"]}.find_all {|rn| rn}
       end
 
       # Materializes the dynamically created Sobject class by adding all attribute accessors for each field as described in the description of the object on Force.com.

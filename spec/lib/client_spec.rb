@@ -302,7 +302,7 @@ describe Databasedotcom::Client do
 
     describe "#materialize" do
       before do
-        @client.stub(:describe_sobject).and_return({"fields" => [], "bar" => "baz"})
+        @client.stub(:describe_sobject).and_return({"fields" => [], "childRelationships" => [], "bar" => "baz"})
       end
       after do
         Object.send(:remove_const, "AccountThing") if Object.const_defined?("AccountThing")
@@ -360,9 +360,9 @@ describe Databasedotcom::Client do
       end
 
       it "caches the Sobject description on the materialized class" do
-        @client.should_receive(:describe_sobject).with("AccountThing").and_return({"fields" => [], "bar" => "baz"})
+        @client.should_receive(:describe_sobject).with("AccountThing").and_return({"fields" => [], "childRelationships" => [], "bar" => "baz"})
         clazz = @client.materialize("AccountThing")
-        clazz.description.should == {"fields" => [], "bar" => "baz"}
+        clazz.description.should == {"fields" => [], "childRelationships" => [], "bar" => "baz"}
       end
 
       it "does not try to materialize classes that are defined" do
@@ -469,6 +469,10 @@ describe Databasedotcom::Client do
     context "with a materialized class" do
       module MySobjects
         class Whizbang < Databasedotcom::Sobject::Sobject
+        end
+        class TestParentObj__c < Databasedotcom::Sobject::Sobject
+        end
+        class TestChildObj__c < Databasedotcom::Sobject::Sobject
         end
       end
 
@@ -593,6 +597,41 @@ describe Databasedotcom::Client do
             object.Date_Field.should be_instance_of(Date)
             object.DateTime_Field.should be_instance_of(DateTime)
             object.Picklist_Multiselect_Field.should be_instance_of(Array)
+          end
+        end
+
+        context "with nested results" do
+          before do
+            response = File.read(File.join(File.dirname(__FILE__), "../fixtures/sobject/test_parent_obj_describe.json"))
+            stub_request(:get, "https://na1.salesforce.com/services/data/v23.0/sobjects/TestParentObj__c/describe").to_return(:body => response, :status => 200)
+            @client.sobject_module = MySobjects
+            MySobjects::TestParentObj__c.client = @client
+            MySobjects::TestParentObj__c.materialize("TestParentObj__c")
+            stub_request(:get, "https://na1.salesforce.com/services/data/v23.0/sobjects/TestChildObj__c/describe").to_return(:body => response, :status => 200)
+            @client.sobject_module = MySobjects
+            MySobjects::TestChildObj__c.client = @client
+            MySobjects::TestChildObj__c.materialize("TestChildObj__c")
+            @response_body = File.read(File.join(File.dirname(__FILE__), "../fixtures/sobject/query_nested_success_response.json"))
+            stub_request(:get, "https://na1.salesforce.com/services/data/v23.0/query?q=SELECT+Name,+(SELECT+Name+FROM+TestChildObjs__r)+FROM+TestParentObj__c").to_return(:body => @response_body, :status => 200)
+          end
+          
+          it "returns the query's primary object type" do
+            results = @client.query("SELECT Name, (SELECT Name FROM TestChildObjs__r) FROM TestParentObj__c")
+            results.each do |result|
+              result.should be_instance_of(MySobjects::TestParentObj__c)
+            end
+          end
+          
+          it "includes the nested query items as a materialized object instance" do
+            results = @client.query("SELECT Name, (SELECT Name FROM TestChildObjs__r) FROM TestParentObj__c")
+            results.first.TestChildObjs__r.each do |result|
+              result.should be_instance_of(MySobjects::TestChildObj__c)
+            end
+          end
+          
+          it "returns the expected field data in the nested object instance" do
+            results = @client.query("SELECT Name, (SELECT Name FROM TestChildObjs__r) FROM TestParentObj__c")
+            results.first.TestChildObjs__r.first.Name.should_not be_nil
           end
         end
 

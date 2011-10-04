@@ -35,8 +35,21 @@ describe Databasedotcom::Sobject::Sobject do
           end
         end
 
+        describe ".relatedLists" do
+          it "returns the relatedLists for this Sobject" do
+            TestClass.relatedLists.should_not be_nil
+            TestClass.relatedLists.should =~ response["childRelationships"].collect { |cr| cr["relationshipName"]}.find_all {|rn| rn}
+          end
+        end
+
         describe "getters and setters" do
           response["fields"].collect { |f| f["name"] }.each do |name|
+            it "creates a getter and setter for the #{name} attribute" do
+              @sobject.should respond_to(name.to_sym)
+              @sobject.should respond_to("#{name}=".to_sym)
+            end
+          end
+          response["childRelationships"].collect { |cr| cr["relationshipName"]}.find_all {|rn| rn}.each do |name|
             it "creates a getter and setter for the #{name} attribute" do
               @sobject.should respond_to(name.to_sym)
               @sobject.should respond_to("#{name}=".to_sym)
